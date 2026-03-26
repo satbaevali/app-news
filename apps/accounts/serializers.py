@@ -1,20 +1,20 @@
 from  django.contrib.auth import authenticate
-from django.contrib.auth.passwords_validators import validate_password  
+from django.contrib.auth.password_validation import validate_password  
 from .models import User
 from rest_framework import serializers
-from django.db.models import CharField, EmailField, BooleanField, DateTimeField, ImageField 
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration.
 
     """
-    password = CharField(
+    password = serializers.CharField(
         write_only=True, 
         required=True, 
         validators=[validate_password]
     )
-    password_confirm = CharField(
+    password_confirm = serializers.CharField(
         write_only=True,
         required=True
     )
@@ -54,11 +54,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
 
 class LoginSerializer(serializers.Serializer):
-    email = EmailField(
-
+    email = serializers.EmailField(
+        required=True
     )
-    password = CharField(
-        write_only=True
+    password = serializers.CharField(
+        write_only=True,
+        required=True
     )
     def validate(self, attrs):
         email = attrs.get('email')
@@ -104,11 +105,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
     def get_posts_counts(self, obj):
-        return obj.posts.count()
+        try:
+            return obj.posts.count()
+        except AttributeError:
+            return 0
     
     def get_comments_counts(self, obj):
-        return obj.comments.count()
-    
+        try:
+            return obj.comments.count()
+        except AttributeError:
+            return 0
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -126,16 +133,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
     
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = CharField(
+    old_password = serializers.CharField(
         write_only=True,
         required=True
     )
-    new_password = CharField(
+    new_password = serializers.CharField(
         write_only=True,
         required=True,
         validators=[validate_password]
     )
-    new_password_confirm = CharField(
+    new_password_confirm = serializers.CharField(
         write_only=True,
         required=True
     )
